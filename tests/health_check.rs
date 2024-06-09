@@ -29,7 +29,7 @@ async fn subscribe_returns_200_for_valid_form_data() {
   let address = spawn_app();
   let client = reqwest::Client::new();
 
-  let body = "email=nomequenaotemainda%40gmail.com";
+  let body = "name=bruno&email=nomequenaotemainda%40gmail.com";
   let response = client
     .post(&format!("{}/subscriptions", &address))
     .header("Content-Type", "application/x-www-form-urlencoded")
@@ -46,13 +46,28 @@ async fn subscribe_returns_400_for_missing_form_data() {
   let address = spawn_app();
   let client = reqwest::Client::new();
 
-  let response = client
-    .post(&format!("{}/subscriptions", &address))
-    .header("Content-Type", "application/x-www-form-urlencoded")
-    .body("")
-    .send()
-    .await
-    .expect("Failed to execute request.");
+  let test_cases = vec![
+    ("name=le%20guin", "missing the email"),
+    ("email=ursula_le_guin%40gmail.com", "missing the name"),
+    ("", "missing both name and email"),
+  ];
 
-  assert_eq!(400, response.status().as_u16());
+  for (invalid_body, error_message) in test_cases {
+    // Act
+    let response = client
+      .post(&format!("{}/subscriptions", &address))
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .body(invalid_body)
+      .send()
+      .await
+      .expect("Failed to execute request.");
+    // Assert
+    assert_eq!(
+      400,
+      response.status().as_u16(),
+      // Additional customised error message on test failure
+      "The API did not fail with 400 Bad Request when the payload was {}.",
+      error_message
+    );
+  }
 }
