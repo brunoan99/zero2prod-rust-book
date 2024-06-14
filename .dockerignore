@@ -1,0 +1,11 @@
+.env
+target/
+tests/
+scripts/
+migrations/
+Dockerfile
+.dockerignore
+.git
+.gitignore
+LICENSE
+README.md

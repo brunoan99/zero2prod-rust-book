@@ -1,6 +1,6 @@
 use actix_web::{dev, web, App, HttpServer};
 use routes::{health_check, subscriptions};
-use sqlx::PgPool;
+use sqlx::{Pool, Postgres};
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
@@ -8,7 +8,7 @@ use crate::routes;
 
 pub fn create_server(
   listener: TcpListener,
-  db_pool: PgPool,
+  db_pool: Pool<Postgres>,
 ) -> Result<dev::Server, std::io::Error> {
   let db_pool = web::Data::new(db_pool);
   let server = HttpServer::new(move || {
