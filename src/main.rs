@@ -1,7 +1,6 @@
 use newsletter::configuration::get_configuration;
 use newsletter::startup::create_server;
 use newsletter::telemetry::{get_subscriber, init_subscriber};
-use secrecy::ExposeSecret;
 use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 
