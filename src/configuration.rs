@@ -1,6 +1,8 @@
+use dotenv;
 use secrecy::{ExposeSecret, Secret};
 use serde_aux::field_attributes::deserialize_number_from_string;
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
+use std::path::Path;
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
@@ -47,30 +49,40 @@ pub struct ApplicationSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
-  let mut settings = config::Config::default();
+  if Path::new("./.env").exists() {
+    dotenv::from_path("./.env").expect("error loading env");
+  } else {
+    println!("Cannot find .env file will not be loaded into environment");
+  }
+
   let base_path =
     std::env::current_dir().expect("Failed to determine the current directory");
   let configuration_directory = base_path.join("configuration");
-
-  settings.merge(
-    config::File::from(configuration_directory.join("base")).required(true),
-  )?;
 
   let environment: Environment = std::env::var("APP_ENVIRONMENT")
     .unwrap_or_else(|_| "local".into())
     .try_into()
     .expect("Failed to parse APP_ENVIRONMENT.");
 
-  settings.merge(
-    config::File::from(configuration_directory.join(environment.as_str()))
-      .required(true),
-  )?;
+  let environment_filename = format!("{}.yaml", environment.as_str());
+  let settings = config::Config::builder()
+    .add_source(config::File::from(
+      configuration_directory.join("base.yaml"),
+    ))
+    .add_source(config::File::from(
+      configuration_directory.join(environment_filename),
+    ))
+    .add_source(
+      config::Environment::with_prefix("APP")
+        .prefix_separator("_")
+        .separator("__"),
+    )
+    .build()?;
 
-  settings.merge(config::Environment::with_prefix("app").separator("__"))?;
-
-  settings.try_into()
+  settings.try_deserialize::<Settings>()
 }
 
+#[derive(Debug)]
 pub enum Environment {
   Local,
   Production,

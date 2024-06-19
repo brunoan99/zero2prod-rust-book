@@ -1,10 +1,10 @@
-use newsletter::configuration::{get_configuration, DatabaseSettings};
-use newsletter::startup::create_server;
-use newsletter::telemetry::{get_subscriber, init_subscriber};
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
+use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::startup::create_server;
+use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
 static TRACING: Lazy<()> = Lazy::new(|| {
   let default_filter_level = "info";
